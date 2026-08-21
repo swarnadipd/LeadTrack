@@ -89,6 +89,14 @@ Each API instance connects to the same PostgreSQL database, so application state
 | `PATCH`  | `/leads/{lead_id}` | Updates an existing lead                        |
 | `DELETE` | `/leads/{lead_id}` | Deletes a lead                                  |
 
+## API Documentation
+
+Interactive Swagger UI is available at:
+
+http://localhost:8080/docs
+
+![LeadTrack Swagger UI](docs/leadtrack-swagger.png)
+
 ### Example Lead
 
 ```json
