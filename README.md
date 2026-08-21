@@ -1,114 +1,217 @@
-# LeadTrack — a tiny CRM API
+# LeadTrack
 
-A small REST API for managing sales leads (name, email, company, status).
-Built with FastAPI + PostgreSQL + SQLAlchemy, containerized with Docker,
-and designed to run two copies behind an Nginx load balancer.
+A small CRM-style REST API for managing sales leads, built with **FastAPI, PostgreSQL, SQLAlchemy, Docker, and Nginx**.
 
-**Every file in this project has been run and tested against a real
-Postgres database before being handed to you** — the commands below are
-exactly what was tested, so if something doesn't work, it's almost
-certainly an environment/setup issue on your machine, not a bug in the
-code. That's actually a good debugging exercise for the interview too.
+LeadTrack provides CRUD operations for sales leads and demonstrates a simple multi-container backend architecture with two FastAPI instances behind an Nginx reverse proxy/load balancer.
 
----
+## Overview
 
-## Day 1 — run it locally (no Docker yet)
+A lead contains:
 
-1. Install Python 3.12+ if you don't have it.
-2. Start a local Postgres. Easiest way — using Docker just for the database:
-   ```bash
-   docker run -d --name leadtrack-db \
-     -e POSTGRES_USER=leadtrack \
-     -e POSTGRES_PASSWORD=leadtrack \
-     -e POSTGRES_DB=leadtrack \
-     -p 5432:5432 postgres:16
-   ```
-3. Install the Python dependencies:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate        # on Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-4. Run the API:
-   ```bash
-   uvicorn main:app --reload
-   ```
-5. Open **http://localhost:8000/docs** in your browser. This is FastAPI's
-   auto-generated interactive documentation — you can create, list,
-   update, and delete leads right from the browser, no extra tools needed.
+- `name`
+- `email`
+- `company`
+- `status`
 
-### Or test it from the terminal (this exact sequence was verified to work)
-```bash
-curl localhost:8000/health
+The API supports creating, reading, updating, filtering, and deleting leads.
 
-curl -X POST localhost:8000/leads -H "Content-Type: application/json" \
-  -d '{"name":"Riya Sharma","email":"riya@acme.com","company":"Acme Co"}'
+The application can run as a single FastAPI service locally, or as a Docker Compose setup with two API instances and an Nginx load balancer.
 
-curl localhost:8000/leads
+## Tech Stack
 
-curl -X PATCH localhost:8000/leads/1 -H "Content-Type: application/json" \
-  -d '{"status":"contacted"}'
+| Technology         | Purpose                         |
+| ------------------ | ------------------------------- |
+| **FastAPI**        | REST API framework              |
+| **Python 3.12**    | Backend language                |
+| **PostgreSQL 16**  | Persistent relational database  |
+| **SQLAlchemy**     | ORM and database interaction    |
+| **Pydantic**       | Request/response validation     |
+| **Docker**         | Containerization                |
+| **Docker Compose** | Multi-container orchestration   |
+| **Nginx**          | Reverse proxy and load balancer |
 
-curl "localhost:8000/leads?status=contacted"
+## Architecture
 
-curl -X DELETE localhost:8000/leads/1
+```text
+                    Client
+                      |
+                      | HTTP
+                      v
+              +---------------+
+              |     Nginx     |
+              | Reverse Proxy |
+              | Load Balancer |
+              +-------+-------+
+                      |
+             +--------+--------+
+             |                 |
+             v                 v
+      +-------------+   +-------------+
+      |    API 1    |   |    API 2    |
+      |   FastAPI   |   |   FastAPI   |
+      +------+------+   +------+------+
+             |                 |
+             +--------+--------+
+                      |
+                      v
+              +---------------+
+              |  PostgreSQL   |
+              |   Database    |
+              +---------------+
 ```
 
-**What to look at while this runs:** open `main.py` and read each endpoint
-top to bottom. Every endpoint follows the same shape: get a database
-session, do a query, return the result. Once that pattern clicks, you
-understand the core of how FastAPI apps work.
+Nginx distributes incoming requests between the two FastAPI instances using round-robin load balancing.
 
----
+Each API instance connects to the same PostgreSQL database, so application state is persisted centrally rather than being stored inside an individual API container.
 
-## Day 2 — run two copies behind a load balancer
+## Features
 
-This is the part most worth understanding deeply for the interview.
+- Create a lead
+- List all leads
+- Filter leads by status
+- Retrieve a lead by ID
+- Update a lead using PATCH
+- Delete a lead
+- Health-check endpoint
+- Two FastAPI application instances
+- Nginx reverse proxy and round-robin load balancing
+- PostgreSQL persistence
+- Interactive API documentation through FastAPI Swagger UI
+
+## API Endpoints
+
+| Method   | Endpoint           | Description                                     |
+| -------- | ------------------ | ----------------------------------------------- |
+| `GET`    | `/health`          | Returns API health and the responding container |
+| `POST`   | `/leads`           | Creates a new lead                              |
+| `GET`    | `/leads`           | Returns all leads                               |
+| `GET`    | `/leads/{lead_id}` | Returns a lead by ID                            |
+| `PATCH`  | `/leads/{lead_id}` | Updates an existing lead                        |
+| `DELETE` | `/leads/{lead_id}` | Deletes a lead                                  |
+
+### Example Lead
+
+```json
+{
+  "name": "Rahul Sharma",
+  "email": "rahul@example.com",
+  "company": "Acme Corp",
+  "status": "new"
+}
+```
+
+## Running with Docker
+
+The recommended way to run the complete application is Docker Compose.
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/swarnadipd/LeadTrack.git
+cd leadtrack
+```
+
+### 2. Start the application
 
 ```bash
 docker compose up --build
 ```
-(Note the space, not a hyphen — `docker compose` is the current standard command.)
 
-This starts **four containers**: `db` (Postgres), `api1` and `api2` (two
-identical copies of the same app), and `nginx` (the load balancer sitting
-in front of both).
+This starts four services:
 
-Now hit the load balancer's port repeatedly and watch the `instance`
-field change:
+- `db` — PostgreSQL
+- `api1` — FastAPI instance 1
+- `api2` — FastAPI instance 2
+- `nginx` — reverse proxy/load balancer
+
+### 3. Open the API documentation
+
+Once the containers are running:
+
+**http://localhost:8080/docs**
+
+FastAPI provides an interactive Swagger UI where the endpoints can be tested directly from the browser.
+
+### 4. Test the health endpoint
+
 ```bash
-curl localhost:8080/health
-curl localhost:8080/health
-curl localhost:8080/health
+curl http://localhost:8080/health
 ```
 
-You'll see the hostname alternate between the two containers — that's
-Nginx round-robining your request across `api1` and `api2`. All your
-`/leads` endpoints also work the same way, just through port 8080 instead
-of 8000 now.
+The response includes the hostname of the FastAPI container that handled the request.
 
----
+Calling the endpoint repeatedly can demonstrate requests being distributed between the two API instances.
 
-## Day 3 — deploy it for real
+### 5. Stop the application
 
-See the full plan and deployment steps in `zero_crm_3day_prep_plan.md`
-(the companion file). Short version: push this folder to a GitHub repo,
-connect it to Render's free tier, add a free Postgres instance there, and
-point `DATABASE_URL` at it.
+Press `Control + C`, then:
 
----
-
-## Project structure
-
+```bash
+docker compose down
 ```
+
+> PostgreSQL data is stored in the Docker volume defined by Docker Compose.
+
+## Project Structure
+
+```text
 leadtrack/
-├── main.py            # FastAPI app + all the /leads endpoints
-├── models.py           # SQLAlchemy table definition (the "leads" table)
-├── schemas.py          # Pydantic request/response shapes
-├── database.py          # DB connection setup
-├── requirements.txt      # Exact tested dependency versions
-├── Dockerfile            # How to containerize the app
-├── docker-compose.yml      # Runs db + api1 + api2 + nginx together
-├── nginx.conf              # Load balancer config
-└── README.md                # This file
+├── main.py               # FastAPI application and API endpoints
+├── database.py           # SQLAlchemy engine, session, and database setup
+├── models.py             # SQLAlchemy database models
+├── schemas.py            # Pydantic request/response schemas
+├── requirements.txt      # Python dependencies
+├── Dockerfile            # FastAPI container image definition
+├── docker-compose.yml    # Multi-container application configuration
+├── nginx.conf             # Nginx reverse proxy/load-balancer configuration
+├── README.md              # Project documentation
+└── .gitignore
 ```
+
+## Design Notes
+
+### Separate API schemas and database models
+
+Pydantic schemas in `schemas.py` define the data accepted and returned by the API, while SQLAlchemy models in `models.py` represent the database structure.
+
+This keeps the API contract separate from the persistence layer.
+
+### Multiple API instances
+
+The same FastAPI application is run in two containers (`api1` and `api2`).
+
+Nginx sits in front of them and distributes requests across the available instances.
+
+### Shared database
+
+Both API instances use the same PostgreSQL database, allowing either instance to read and write the same application data.
+
+## What This Project Demonstrates
+
+- Designing a REST API with FastAPI
+- Request and response validation with Pydantic
+- Relational data persistence with PostgreSQL
+- ORM-based database interaction using SQLAlchemy
+- Containerizing a Python backend with Docker
+- Running multiple application instances with Docker Compose
+- Reverse proxying and load balancing with Nginx
+- Debugging service startup and container-to-container connectivity
+
+## Future Improvements
+
+Possible next steps for the project include:
+
+- PostgreSQL health checks and more robust service startup handling
+- Database migrations with Alembic
+- Authentication and authorization
+- Stronger validation for lead status values
+- Automated tests
+- Structured application logging
+- CI/CD
+- Production deployment
+
+## Author
+
+**Swarnadip Dasgupta**
+
+GitHub: `https://github.com/swarnadipd`
