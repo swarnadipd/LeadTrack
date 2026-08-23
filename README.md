@@ -48,20 +48,25 @@ A sales user can:
 
 ## Architecture
 
+````markdown id="1nj2oe"
+## Architecture
+
 ```mermaid
 flowchart LR
-    U[User] --> FE[Next.js Frontend]
-    FE --> NG[Nginx]
-    NG --> API1[FastAPI - API 1]
-    NG --> API2[FastAPI - API 2]
+    U[User] <--> FE[Next.js Frontend]
 
-    API1 --> DB[(PostgreSQL)]
-    API2 --> DB
+    FE <--> NG[Nginx Load Balancer]
 
-    API1 --> LC[LangChain]
-    API2 --> LC
-    LC --> GM[Google Gemini API]
+    NG <--> API1[FastAPI API 1<br/>LangChain Pipeline]
+    NG <--> API2[FastAPI API 2<br/>LangChain Pipeline]
+
+    API1 <--> DB[(PostgreSQL)]
+    API2 <--> DB
+
+    API1 <--> GM[Google Gemini API]
+    API2 <--> GM
 ```
+````
 
 ### AI Pipeline
 
