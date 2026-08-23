@@ -1,21 +1,27 @@
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
 
-# Virtual environments
-venv/
+# Python virtual environments
 .venv/
+venv/
+Backend/.venv/
 
 # Environment variables / secrets
 .env
 .env.*
+!.env.example
+
+# Next.js
+node_modules/
+.next/
+Frontend/node_modules/
+Frontend/.next/
+Frontend/.env.local
 
 # macOS
 .DS_Store
 
 # IDE
 .vscode/
-
-# Logs
-*.log
+.idea/

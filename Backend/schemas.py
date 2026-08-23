@@ -33,3 +33,17 @@ class LeadOut(BaseModel):
     # This lets FastAPI build a LeadOut directly from a SQLAlchemy
     # Lead object (database row), not just from a plain dict.
     model_config = ConfigDict(from_attributes=True)
+
+
+class RawLeadInput(BaseModel):
+    # Freeform text: an email, call notes, whatever a broker pastes in.
+    raw_text: str
+
+
+class QualifiedLeadOut(LeadOut):
+    # Everything LeadOut has, plus what the AI pipeline decided and why —
+    # returning the reasoning alongside the result is what makes the
+    # pipeline demoable and debuggable, not just a black box.
+    ai_priority: str
+    ai_reason: str
+    ai_notes_summary: str
