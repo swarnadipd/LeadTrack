@@ -277,7 +277,7 @@ Example:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-3.7-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
 The real `.env` file should never be committed to GitHub.
@@ -286,7 +286,7 @@ A safe `.env.example` file can be committed instead:
 
 ```env
 GEMINI_API_KEY=replace_with_your_google_ai_studio_key
-GEMINI_MODEL=gemini-3.7-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
 ---
@@ -520,7 +520,7 @@ Example:
 
 ```env
 GEMINI_API_KEY=your_secret_api_key
-GEMINI_MODEL=gemini-3.7-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
 The backend reads these values using environment variables instead of hard-coding them inside Python files.
@@ -547,7 +547,7 @@ Example:
 
 ```env
 GEMINI_API_KEY=secret_key
-GEMINI_MODEL=gemini-3.7-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
 Think of it as the application's **private configuration file**.
